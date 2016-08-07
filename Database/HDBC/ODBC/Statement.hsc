@@ -367,15 +367,16 @@ getBindCols sstate cstmt = do
       Just bindCols -> do
         return (mBindCols, bindCols)
 
--- This is only for String data. For binary fix should be very easy. Just check the column type and use buflen instead of buflen - 1
 getLongColData cstmt bindCol = do
-   let (BindColString buf bufLen col) = bindCol
+   let (buf, bufLen, col, bufLen') = case bindCol of
+         BindColString buf bufLen col  -> (buf, bufLen, col, bufLen - 1)
+         BindColBinary buf bufLen col  -> (castPtr buf, bufLen, col, bufLen)
+         BindColWString buf bufLen col -> (castPtr buf, bufLen, col, bufLen * 4)
    hdbcTrace $ "buflen: " ++ show bufLen
-   bs <- B.packCStringLen (buf, fromIntegral (bufLen - 1))
+   bs <- B.packCStringLen (buf, fromIntegral bufLen')
    hdbcTrace $ "sql_no_total col " ++ show (BUTF8.toString bs)
    bs2 <- getRestLongColData cstmt #{const SQL_CHAR} col bs
    return $ SqlByteString bs2
-
 
 getRestLongColData cstmt cBinding icol acc = do
   hdbcTrace "getLongColData"
