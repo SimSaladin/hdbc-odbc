@@ -672,8 +672,8 @@ mkBindCol sstate cstmt col = do
  where
   col' = fromIntegral col
 
-colBufSizeDefault = 1024
-colBufSizeMaximum = 4096
+colBufSizeDefault = 2048
+colBufSizeMaximum = 131072 -- 8192
 
 utf8EncodingMaximum = 6
 wcSize = 2
